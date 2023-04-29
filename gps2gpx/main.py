@@ -3,7 +3,7 @@ import threading
 import datetime
 
 
-class GPS:
+class Gps2Gpx:
     is_service_started = False
     gpgga_string = "$GPGGA,"
     port = "/dev/ttyS0"
@@ -11,15 +11,16 @@ class GPS:
     file_name = datetime.datetime.strfStrig("%d-%m-%y-%H-%M-%S")
     is_recording_gps = False
     is_worker_running = False
-    def __init__(self,port,file_name):
+    def __init__(self,port,baudrate,file_name):
         self.port = port
         self.file_name = file_name
+        self.baudrate = baudrate
         self.start_service()
 
     
     def start_service(self):
         try:
-            self.serial_port = serial.Serial(self.port , baudrate=9600 , timeout=1)
+            self.serial_port = serial.Serial(self.port , baudrate=self.baudrate , timeout=1)
             self.is_service_started = True
         except PermissionError:
             self.is_service_started = False

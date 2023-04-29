@@ -1,0 +1,1 @@
+from gps2gpx.main import GPS
