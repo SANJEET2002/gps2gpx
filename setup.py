@@ -9,7 +9,13 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
 
 VERSION = '0.0.1'
 DESCRIPTION = 'gps2gpx gps2gpx is a Python library for capturing serial GPS data and converting it into a .gpx file format'
-LONG_DESCRIPTION = 'A package that allows to build simple streams of video, audio and camera data.'
+LONG_DESCRIPTION = """
+gps2gpx is a Python library that allows you to read serial GPS data and convert it into a .gpx file format. It is designed to be lightweight, efficient, and non-blocking, using multi-threading to capture real-time GPS data without interrupting your program's main flow.
+
+The library is mainly intended for use on Raspberry Pi, but it is also compatible with other platforms such as Linux and Windows. It supports a range of GPS devices and offers customizable data fields.
+
+gps2gpx is open-source, allowing for community contributions and modifications. It is an ideal tool for tracking, mapping, and navigation applications where real-time GPS data is needed.
+"""
 
 # Setting up
 setup(

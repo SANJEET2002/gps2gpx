@@ -1,6 +1,8 @@
 import serial
 import threading
 import datetime
+import time
+import gpxpy.gpx
 
 
 class Gps2Gpx:
@@ -8,12 +10,12 @@ class Gps2Gpx:
     gpgga_string = "$GPGGA,"
     port = "/dev/ttyS0"
     connected_to_satelite = False
-    file_name = datetime.datetime.strfStrig("%d-%m-%y-%H-%M-%S")
     is_recording_gps = False
     is_worker_running = False
-    def __init__(self,port,baudrate,file_name):
+    baudrate = 9600
+    def __init__(self,port,baudrate,folder):
         self.port = port
-        self.file_name = file_name
+        self.folder = folder
         self.baudrate = baudrate
         self.start_service()
 
@@ -35,7 +37,14 @@ class Gps2Gpx:
             print('no data received ,check gps is connected --------> \n')
 
     def get_cordinates(self):
-        data = self.serial_port.readline().decode('utf-8')
+
+        data = None
+
+        while True:
+            data = self.serial_port.readline().decode('utf-8')
+
+            if data.find(self.gpgga_string) > -1:
+                break;
 
         if data:
             GPGGA_data_available = data.find(self.gpgga_string)
@@ -45,9 +54,8 @@ class Gps2Gpx:
                 if int(raw_data[7]) <= 3:
                     print('not enough statelites in view')
                     self.connected_to_satelite = False
-                    return
             
-                if raw_data[2] and raw_data[4]:
+                elif raw_data[2] and raw_data[4]:
                     # extract the latitude and longitude information
                     lat = float(raw_data[2][:2]) + float(raw_data[2][2:]) / 60
                     lon = float(raw_data[4][:3]) + float(raw_data[4][3:]) / 60
@@ -60,27 +68,48 @@ class Gps2Gpx:
                     if raw_data[5] == "W":
                         lon = -lon
 
+                    self.connected_to_satelite = True
+
                     return { 'longitude' : round(lon, 6) , "latitude" : round(lat,6)}
 
                 else:
                     print('unable to parse data ----> \n')
 
+            else:
+                print('no valid string')
 
     def gps_recording_worker(self):
         self.is_worker_running = True
+        self.is_recording_gps = True
+        startTime = datetime.datetime.now().strftime("%d-%m-%y-%H-%M-%S")
+
+        gpx = gpxpy.gpx.GPX()
+        gpx_track = gpxpy.gpx.GPXTrack()
+        gpx.tracks.append(gpx_track)
+        gpx_segment = gpxpy.gpx.GPXTrackSegment()
+        gpx_track.segments.append(gpx_segment)
+
         if not self.is_service_started:
             print('service not running ----> \n')
             self.is_worker_running = False
             return 
-        elif not self.connected_to_satelite:
-            print('not connected to satelite ----> \n')
-            self.is_worker_running = False
-            return
         
         else:
-            while self.is_recording_gps:
-                cordinates = self.get_cordinates()
-                print(cordinates)
+            while True:
+                if self.is_recording_gps:
+                    cordinates = self.get_cordinates()
+                    print(cordinates)
+                    if cordinates:
+                        gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(cordinates['latitude'], cordinates["longitude"], time=datetime.datetime.now()))
+                else:
+                    try:
+                        with open(f"{self.folder}/{startTime}.gpx", "w") as f:
+                            f.write(gpx.to_xml())
+                            print("saved cordinates into gpx file \n")
+                        break
+                    except Exception as e:
+                        print(e)
+
 
     def start_worker(self):
         self.t1 = threading.Thread(target=self.gps_recording_worker)
@@ -94,3 +123,12 @@ class Gps2Gpx:
         else:
             self.is_recording_gps = False
             print("worker is now resting")
+
+
+
+
+if __name__ == "__main__":
+    converter = Gps2Gpx(port='/dev/ttyS0',baudrate=9600,folder="./")
+    converter.start_worker()
+    time.sleep(10)
+    converter.stop_worker()

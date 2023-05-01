@@ -1,6 +1,10 @@
 # **gps2gpx**
 
-gps2gpx is a Python library for capturing serial GPS data and converting it into a .gpx file format. It provides an easy-to-use interface for accessing GPS data and converting it into a standardized format, making it useful for a wide range of applications such as tracking, mapping, and navigation.
+gps2gpx is a Python library that allows you to read serial GPS data and convert it into a .gpx file format. It is designed to be lightweight, efficient, and non-blocking, using multi-threading to capture real-time GPS data without interrupting your program's main flow.
+
+The library is mainly intended for use on Raspberry Pi, but it is also compatible with other platforms such as Linux and Windows. It supports a range of GPS devices and offers customizable data fields.
+
+gps2gpx is open-source, allowing for community contributions and modifications. It is an ideal tool for tracking, mapping, and navigation applications where real-time GPS data is needed.
 
   
 
@@ -18,25 +22,25 @@ You can install gps2gpx using pip:
 
 # Initialize the GPS to GPX converter
 
-    converter = Gps2Gpx()
+    converter = Gps2Gpx(port='/dev/ttyS0',baudrate=9600,folder="./")
 
   
 
-# Connect to the GPS device
+# Test GPS and device communication
 
-    converter.connect(port='/dev/ttyUSB0', baudrate=4800)
+    converter.test_gps_sensor()
 
   
 
-# Capture GPS data and write it to a .gpx file
+# Start Capturing GPS data and saver to .gpx file
 
-    converter.capture_data(duration=60, output_file='gps_data.gpx')
+    converter.start_worker()
 
   
 
 # Disconnect from the GPS device
 
-    converter.disconnect()
+    converter.stop_worker()
 
 # Features
 
